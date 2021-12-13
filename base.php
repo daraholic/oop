@@ -58,12 +58,129 @@ class DB{
             return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
         
         }
+    // 以下要背下來
+    // 只取一筆
+    public function find($id){
+        $sql="SELECT * FROM $this->table WHERE ";
+        if(is_array($id)){
+
+            foreach($id as $key => $value){
+        
+                $tmp[]="`$key`='$value'";
+    
+            }
+
+            $sql .= implode(' AND ',$tmp);
+
+        }else{
+
+            $sql .= " id='$id'";
+
+        }
+
+        //echo $sql;
+
+        return $this->pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
+    }
+    // 計算某個欄位或是計算符合的筆數
+    // max,min,sum,count,avg
+    public function math($math,$col,...$arg){
+        $sql="SELECT $math($col) FROM $this->table ";
+
+        //依參數數量來決定進行的動作因此使用switch...case
+        switch(count($arg)){
+            case 1:
+  
+                if(is_array($arg[0])){
+
+                    foreach($arg[0] as $key => $value){
+        
+                        $tmp[]="`$key`='$value'";
+        
+                    }
+        
+                    $sql.=" WHERE ". implode(" AND " ,$tmp);
+                }else{
+                    
+                    $sql.=$arg[0];
+                }
+            break;
+            case 2:
+
+                foreach($arg[0] as $key => $value){
+        
+                    $tmp[]="`$key`='$value'";
+        
+                }
+        
+                $sql.=" WHERE ". implode(" AND " ,$tmp) . $arg[1];
+            break;
+        
+            }
+        
+            echo $sql;
+            return $this->pdo->query($sql)->fetchColumn();
+    }
+    // 新增或更新資料
+    public function save($array){
+        if(isset($arry['id'])){
+        // update
+            foreach($array as $key => $value){
+                $tmp[]="`$key`='$value'";
+        }
+        $sql="UPDATE $this->table SET ".implode(" , ",$tmp);
+        $sql .=" WHERE `id`='{$array['id']}'";
+        // UPDATE $this->table SET col1=value1,
+        }else{
+            // insert
+        }
+        echo $sql;
+        return $this->pdo->exec($sql);
     }
 
- 
-$db=new DB('costs');
-echo "<pre>";
-print_r($db->all(['item'=>'pizza']));
-echo "</pre>";
+    // 刪除資料
+    public function del($id){
+        $sql="DELETE FROM $this->table WHERE ";
+        if(is_array($id)){
+
+            foreach($id as $key =>$value){
+                $tmp[]="`$key`='$value'";
+            }
+            $sql .=implode(' AND',$tmp);
+        }else{
+            $sql .="id='$id'";
+        }
+        // echo $sql
+        return $this->pdo->exec($sql);
+        
+    }
+    // 萬用的查詢
+    public function q($sql){
+        return $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+}
+
+    $Journal=new DB('costs');
+    // echo "<pre>";
+    // print_r($Journal->math('count','*',['item'=>'早餐']));
+    // echo "</pre>"; 
+    echo "<pre>";
+    print_r($Journal->save(['id'=>7,'money'=>310,'place'=>'義尤味勁']));
+    echo "</pre>"; 
+    // echo "<pre>";
+    // print_r($Journal->math('min','money',['item'=>'早餐']));
+    // echo "</pre>"; 
+    /* echo "<pre>";
+    print_r($Journal->all(['item'=>'早餐']));
+    echo "</pre>";  */
+    
+    /* $db=new DB('journal');
+    echo "<pre>";
+    print_r($db->all(['item'=>'早餐']," ORDER by `money` desc"));
+    echo "</pre>";
+    echo "<pre>";
+    print_r($db->all());
+    echo "</pre>"; */
 
 ?>
